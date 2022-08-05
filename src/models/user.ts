@@ -1,16 +1,22 @@
-import mongoose from 'mongoose';
+import mongoose, { Document, Model } from 'mongoose';
+import { ProfileError } from '../errors/errors';
 
-interface IUserSchema {
-    name: string,
-    about: string,
-    avatar: string,
+interface IUserSchema extends Document {
+  name: string,
+  about: string,
+  avatar: string,
+}
+
+interface IUserModel extends Model<IUserSchema> {
+  // eslint-disable-next-line no-unused-vars
+  findAndChangedUser(_id: string | undefined, obj: any): Promise<IUserSchema>
 }
 
 const userSchema = new mongoose.Schema<IUserSchema>({
   name: {
     type: String,
     required: [
-      function () { return true; },
+      true,
       'username is required',
     ],
     minlength: 2,
@@ -19,7 +25,7 @@ const userSchema = new mongoose.Schema<IUserSchema>({
   about: {
     type: String,
     required: [
-      function () { return true; },
+      true,
       'about is required',
     ],
     minlength: 2,
@@ -28,27 +34,26 @@ const userSchema = new mongoose.Schema<IUserSchema>({
   avatar: {
     type: String,
     required: [
-      function () { return true; },
+      true,
       'avatar is required',
     ],
   },
 });
 
-// userSchema.statics.findUserByCredentials = function (email, password) {
-//   return this.findOne({ "auth.email": email })
-//     .then((user) => {
-//       if (!user) {
-//         return Promise.reject(new Error('Неправильные почта'));
-//       }
+userSchema.statics.findAndChangedUser = function (_id, obj) {
+  return this.findByIdAndUpdate(
+    _id,
+    obj,
+    { new: true, runValidators: true },
+  ).then((user: IUserSchema & {
+    _id: mongoose.Types.ObjectId;
+  } | null) => {
+    if (!user) {
+      throw new ProfileError('Переданы некорректные данные при обновлении профиля.');
+    } else {
+      return user;
+    }
+  });
+};
 
-//       return bcrypt.compare(password, user.auth.password)
-//         .then((matched) => {
-//           if (!matched) {
-//             return Promise.reject(new Error('Неправильные пароль'));
-//           }
-//           return user;
-//         });
-//     });
-// };
-
-export default mongoose.model<IUserSchema>('user', userSchema);
+export default mongoose.model<IUserSchema, IUserModel>('user', userSchema);

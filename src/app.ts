@@ -1,6 +1,5 @@
-import express, { Request, Response } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
-import path from 'path';
 import routerUser from './routes/user';
 import routerAuthUser from './routes/authUser';
 import routerCard from './routes/card';
@@ -27,9 +26,9 @@ app.use('/users', routerAuthUser);
 
 app.use('/cards', routerCard);
 
-app.use((err: SessionError, req: Request, res: Response) => {
+// eslint-disable-next-line no-unused-vars
+app.use((err: SessionError, req: Request, res: Response, next: NextFunction) => {
   const { statusCode = 500, message } = err;
-
   res
     .status(statusCode)
     .send({
@@ -38,8 +37,6 @@ app.use((err: SessionError, req: Request, res: Response) => {
         : message,
     });
 });
-
-app.use(express.static(path.join(__dirname, 'dist')));
 
 app.listen(+PORT, () => {
   console.log(`App listening on port ${PORT}`);

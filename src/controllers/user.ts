@@ -1,19 +1,23 @@
 import { Request, Response, NextFunction } from 'express';
-import mongoose from 'mongoose';
 import User from '../models/user';
-import { ProfileError } from '../errors/errors';
+import { NotFoundError, ProfileError } from '../errors/errors';
+import { SessionRequest } from '../utils/interfaces';
 
-export const findById = (req: Request, res: Response, next: NextFunction) => {
-  const _id = req.params.id;
-  const isValidId = mongoose.Types.ObjectId.isValid(_id);
-
-  if (!isValidId) return res.status(404).send({ message: 'Пользователь по указанному _id не найден.' });
+export const findById = (req: SessionRequest, res: Response, next: NextFunction) => {
+  const _id = req.params.userId;
 
   return User.findById(_id)
     .then((user) => {
       res.send({ user });
     })
-    .catch(next);
+    .catch((err) => {
+      switch (err.name) {
+        case 'CastError':
+          next(new NotFoundError('Такого пользователя не существует.'));
+          break;
+        default: next(err);
+      }
+    });
 };
 
 export const findAll = (req: Request, res: Response, next: NextFunction) => {
@@ -28,15 +32,16 @@ export const create = (req: Request, res: Response, next: NextFunction) => {
     about: req.body.about,
     avatar: req.body.avatar,
   }).then((user) => {
-    if (!user) {
-      throw new ProfileError('Переданы некорректные данные при создании пользователя.');
-    } else {
-      res.status(201).send({
-        _id: user._id,
-        name: user.name,
-        about: user.about,
-        avatar: user.avatar,
-      });
+    res.status(201).send({ user });
+  }).catch((err) => {
+    switch (err.name) {
+      case 'ValidationError':
+        next(new ProfileError('Переданы некорректные данные при создании пользователя.'));
+        break;
+      case 'CastError':
+        next(new ProfileError('Переданы некорректные данные при создании пользователя.'));
+        break;
+      default: next(err);
     }
-  }).catch(next);
+  });
 };

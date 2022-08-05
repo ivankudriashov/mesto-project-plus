@@ -1,23 +1,12 @@
-import mongoose from 'mongoose';
 import { Response, NextFunction } from 'express';
 import { SessionRequest } from '../utils/interfaces';
 import User from '../models/user';
-import { ProfileError } from '../errors/errors';
+import { NotFoundError } from '../errors/errors';
 
 export const changeProfile = (req: SessionRequest, res: Response, next: NextFunction) => {
-  let _id;
-  let isValidId;
+  const _id = req.user?._id;
 
-  if (req.user) {
-    _id = req.user._id;
-    isValidId = mongoose.Types.ObjectId.isValid(_id);
-  } else {
-    throw new Error();
-  }
-
-  if (!isValidId) return res.status(404).send({ message: 'Пользователь по указанному _id не найден.' });
-
-  return User.findByIdAndUpdate(
+  return User.findAndChangedUser(
     _id,
     {
       $set: {
@@ -25,47 +14,43 @@ export const changeProfile = (req: SessionRequest, res: Response, next: NextFunc
         about: req.body.about,
       },
     },
-    { new: true },
-  ).then((user) => {
-    if (user === null) {
-      throw new ProfileError('Переданы некорректные данные при обновлении профиля.');
-    } else {
+  )
+    .then((user) => {
       res.status(200).send({
         name: user.name,
         about: user.about,
       });
-    }
-  }).catch(next);
+    })
+    .catch((err) => {
+      switch (err.name) {
+        case 'CastError':
+          next(new NotFoundError('Такого пользователя не существует.'));
+          break;
+        default: next(err);
+      }
+    });
 };
 
 export const changeAvatar = (req: SessionRequest, res: Response, next: NextFunction) => {
-  let _id;
-  let isValidId;
+  const _id = req.user?._id;
 
-  if (req.user) {
-    _id = req.user._id;
-    isValidId = mongoose.Types.ObjectId.isValid(_id);
-  } else {
-    throw new Error();
-  }
-
-  if (!isValidId) return res.status(404).send({ message: 'Пользователь по указанному _id не найден.' });
-
-  return User.findByIdAndUpdate(
+  return User.findAndChangedUser(
     _id,
     {
       $set: {
         avatar: req.body.avatar,
       },
     },
-    { new: true },
   ).then((user) => {
-    if (user === null) {
-      throw new ProfileError('Переданы некорректные данные при обновлении профиля.');
-    } else {
-      res.status(200).send({
-        avatar: user.avatar,
-      });
+    res.status(200).send({
+      avatar: user.avatar,
+    });
+  }).catch((err) => {
+    switch (err.name) {
+      case 'CastError':
+        next(new NotFoundError('Такого пользователя не существует.'));
+        break;
+      default: next(err);
     }
-  }).catch(next);
+  });
 };

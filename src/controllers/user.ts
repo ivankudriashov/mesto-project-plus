@@ -8,6 +8,9 @@ export const findById = (req: SessionRequest, res: Response, next: NextFunction)
 
   return User.findById(_id)
     .then((user) => {
+      if (!user) {
+        throw new NotFoundError('Такого пользователя не существует.');
+      }
       res.send({ user });
     })
     .catch((err) => {
@@ -36,9 +39,6 @@ export const create = (req: Request, res: Response, next: NextFunction) => {
   }).catch((err) => {
     switch (err.name) {
       case 'ValidationError':
-        next(new ProfileError('Переданы некорректные данные при создании пользователя.'));
-        break;
-      case 'CastError':
         next(new ProfileError('Переданы некорректные данные при создании пользователя.'));
         break;
       default: next(err);

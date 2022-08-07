@@ -1,5 +1,5 @@
 import mongoose, { ObjectId, Document, Model } from 'mongoose';
-import { ProfileError } from '../errors/errors';
+import { NotFoundError, ProfileError } from '../errors/errors';
 
 interface ICardSchema extends Document {
   name: string,
@@ -29,7 +29,6 @@ const cardSchema = new mongoose.Schema<ICardSchema>({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'user',
     required: true,
-    default: [],
   },
   likes: {
     type: [mongoose.Schema.Types.ObjectId],
@@ -50,8 +49,12 @@ cardSchema.statics.findCardAndChangeLike = function (_id, obj) {
   ).then((card: ICardSchema & {
     _id: mongoose.Types.ObjectId;
   } | null) => {
+    console.log(card);
+    if (!_id) {
+      throw new ProfileError('Переданы некорректные данные.');
+    }
     if (!card) {
-      throw new ProfileError('Переданы некорректные данные при обновлении профиля.');
+      throw new NotFoundError('Карточка не найдена.');
     } else {
       return card;
     }

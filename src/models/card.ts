@@ -49,7 +49,6 @@ cardSchema.statics.findCardAndChangeLike = function (_id, obj) {
   ).then((card: ICardSchema & {
     _id: mongoose.Types.ObjectId;
   } | null) => {
-    console.log(card);
     if (!_id) {
       throw new ProfileError('Переданы некорректные данные.');
     }

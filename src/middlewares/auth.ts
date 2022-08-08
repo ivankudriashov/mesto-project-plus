@@ -1,10 +1,33 @@
-import { NextFunction, Response } from 'express';
-import { SessionRequest } from '../utils/interfaces';
+import { NextFunction, Request, Response } from 'express';
+import jwt, { JwtPayload } from 'jsonwebtoken';
+import AuthError from '../errors/authError';
 
+interface SessionRequest extends Request {
+    user?: string | JwtPayload;
+}
+
+// eslint-disable-next-line consistent-return
 export default (req: SessionRequest, res: Response, next: NextFunction) => {
-  req.user = {
-    _id: '62ed48bde0cd6eb3d8c85589',
-  };
+  const { authorization } = req.headers;
+  const { NODE_ENV, JWT_SECRET } = process.env;
+
+  if (!authorization || !authorization.startsWith('Bearer ')) {
+    throw new AuthError('Необходима авторизация');
+  }
+
+  const token = authorization.replace('Bearer ', '');
+
+  let payload;
+
+  try {
+    payload = jwt.verify(
+      token,
+      NODE_ENV === 'production' ? JWT_SECRET as string : 'dev-secret',
+    );
+  } catch (err) {
+    next(new AuthError('Необходима авторизация'));
+  }
+  req.user = payload;
 
   next();
 };

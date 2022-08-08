@@ -1,5 +1,6 @@
 import mongoose, { ObjectId, Document, Model } from 'mongoose';
-import { NotFoundError, ProfileError } from '../errors/errors';
+import NotFoundError from '../errors/notFoundError';
+import RequestError from '../errors/requestError';
 
 interface ICardSchema extends Document {
   name: string,
@@ -50,7 +51,7 @@ cardSchema.statics.findCardAndChangeLike = function (_id, obj) {
     _id: mongoose.Types.ObjectId;
   } | null) => {
     if (!_id) {
-      throw new ProfileError('Переданы некорректные данные.');
+      throw new RequestError('Переданы некорректные данные.');
     }
     if (!card) {
       throw new NotFoundError('Карточка не найдена.');

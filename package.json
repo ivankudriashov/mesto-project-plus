@@ -12,20 +12,32 @@
   "author": "Ivan Kudriashov",
   "license": "ISC",
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.2",
     "@types/express": "^4.17.13",
+    "@types/jsonwebtoken": "^8.5.8",
     "@types/node": "^18.6.3",
+    "@types/validator": "^13.7.5",
     "@typescript-eslint/eslint-plugin": "^5.32.0",
     "@typescript-eslint/parser": "^5.32.0",
+    "crypto-js": "^4.1.1",
     "eslint": "^8.21.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-plugin-import": "^2.26.0",
     "ts-node": "^10.9.1",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^4.7.4"
+    "typescript": "^4.7.4",
+    "winston-daily-rotate-file": "^4.7.1"
   },
   "dependencies": {
     "express": "^4.18.1",
-    "mongoose": "^6.4.6"
+    "mongoose": "^6.4.6",
+    "validator": "^13.7.0",
+    "bcryptjs": "^2.4.3",
+    "celebrate": "^15.0.1",
+    "jsonwebtoken": "^8.5.1",
+    "dotenv": "^16.0.1",
+    "winston": "^3.8.1",
+    "express-winston": "^4.2.0"
   },
   "repository": {
     "type": "git",

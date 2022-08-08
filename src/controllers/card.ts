@@ -2,23 +2,28 @@ import { Request, Response, NextFunction } from 'express';
 import Card from '../models/card';
 import User from '../models/user';
 import { SessionRequest } from '../utils/interfaces';
-import { NotFoundError, ProfileError } from '../errors/errors';
+import NotFoundError from '../errors/notFoundError';
+import RequestError from '../errors/requestError';
+import ForbiddenError from '../errors/forbiddenError';
 
-export const deleteCard = (req: Request, res: Response, next: NextFunction) => {
+export const deleteCard = (req: SessionRequest, res: Response, next: NextFunction) => {
   const _id = req.params.cardId;
+  const _userId = req.user?._id;
 
-  return Card.deleteOne({ _id })
-    .then((data) => {
-      // deleteOne не возвращает null. сделал проверку по количеству удаленных элементов
-      if (data.deletedCount === 0) {
+  Card.findOneAndDelete({ _id })
+    .then((card) => {
+      if (card && _userId !== String(card.owner)) {
+        throw new ForbiddenError('Нельзя удалить чужую карточку');
+      }
+      if (!card) {
         throw new NotFoundError('Такой карточки не существует.');
       }
-      res.status(200).send({});
+      return res.status(200).send({ message: 'Карточка удалена.' });
     })
     .catch((err) => {
       switch (err.name) {
         case 'CastError':
-          next(new ProfileError('Переданы некорректные данные.'));
+          next(new RequestError('Переданы некорректные данные.'));
           break;
         default: next(err);
       }
@@ -44,10 +49,10 @@ export const create = (req: SessionRequest, res: Response, next: NextFunction) =
   }).catch((err) => {
     switch (err.name) {
       case 'ValidationError':
-        next(new ProfileError('Переданы некорректные данные при создании пользователя.'));
+        next(new RequestError('Переданы некорректные данные при создании пользователя.'));
         break;
       case 'CastError':
-        next(new ProfileError('Переданы некорректные данные при создании пользователя.'));
+        next(new RequestError('Переданы некорректные данные при создании пользователя.'));
         break;
       default: next(err);
     }
@@ -65,12 +70,12 @@ export const likeCard = (req: SessionRequest, res: Response, next: NextFunction)
       Card.findCardAndChangeLike(
         req.params.cardId,
         { $addToSet: { likes: _id } },
-      ).then(() => { // Проверка на null происходит в findCardAndChangeLike
+      ).then(() => {
         res.status(200).send({ message: 'Лайк добавлен' });
       }).catch((err) => {
         switch (err.name) {
           case 'CastError':
-            next(new ProfileError('Переданы некорректные данные при добавлении лайка.'));
+            next(new RequestError('Переданы некорректные данные при добавлении лайка.'));
             break;
           default: next(err);
         }
@@ -102,7 +107,7 @@ export const dislikeCard = (req: SessionRequest, res: Response, next: NextFuncti
       }).catch((err) => {
         switch (err.name) {
           case 'CastError':
-            next(new ProfileError('Переданы некорректные данные при добавлении лайка.'));
+            next(new RequestError('Переданы некорректные данные при добавлении лайка.'));
             break;
           default: next(err);
         }

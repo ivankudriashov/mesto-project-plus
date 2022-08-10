@@ -26,6 +26,7 @@ export default (req: SessionRequest, res: Response, next: NextFunction) => {
     );
   } catch (err) {
     next(new AuthError('Необходима авторизация'));
+    return;
   }
   req.user = payload;
 

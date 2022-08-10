@@ -19,7 +19,7 @@ const cardSchema = new mongoose.Schema<ICardSchema>({
   name: {
     type: String,
     minlength: 2,
-    maxlength: 20,
+    maxlength: 30,
     required: true,
   },
   link: {
@@ -42,7 +42,7 @@ const cardSchema = new mongoose.Schema<ICardSchema>({
   },
 });
 
-cardSchema.statics.findCardAndChangeLike = function (_id, obj) {
+cardSchema.statics.findCardAndChangeLike = function (_id: string | undefined, obj: any) {
   return this.findByIdAndUpdate(
     _id,
     obj,

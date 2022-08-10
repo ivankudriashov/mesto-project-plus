@@ -13,12 +13,15 @@ export const errorHandling = (
   if (!isCelebrateError(err)) {
     return next(err);
   }
-
   const errorBody = err.details.get('body');
-  const message = errorBody?.details[0].message;
+  const messageBody = errorBody?.details[0].message;
+  const errorParams = err.details.get('params');
+  const messageParams = errorParams?.details[0].message;
 
-  if (message) {
-    throw new RequestError(message);
+  if (messageBody) {
+    throw new RequestError(messageBody);
+  } else if (messageParams) {
+    throw new RequestError(messageParams);
   } else {
     next(err);
   }

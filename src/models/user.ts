@@ -4,6 +4,8 @@ import validator from 'validator';
 import bcrypt from 'bcryptjs';
 import RequestError from '../errors/requestError';
 import NotFoundError from '../errors/notFoundError';
+import AuthError from '../errors/authError';
+import { url } from '../utils/patterns';
 
 interface IUserSchema extends Document {
   email: string,
@@ -42,7 +44,7 @@ const userSchema = new mongoose.Schema<IUserSchema, IUserModel>({
   about: {
     type: String,
     minlength: 2,
-    maxlength: 200,
+    maxlength: 30,
     default: 'Исследователь',
   },
   avatar: {
@@ -51,31 +53,31 @@ const userSchema = new mongoose.Schema<IUserSchema, IUserModel>({
     validate: {
       validator(v: string) {
         // eslint-disable-next-line no-useless-escape
-        return /https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9-\._~:\/?#\[\]@!\$&'\(\)\*\+,;=]{1,}\.[a-zA-Z]{2,}#{0,1}/.test(v);
+        return url.test(v);
       },
       message: 'Неправильный формат ссылки',
     },
   },
 });
 
-userSchema.statics.findUserByCredentials = function (email, password) {
+userSchema.statics.findUserByCredentials = function (email: string, password: string) {
   return this.findOne({ email }).select('+password')
     .then((user) => {
       if (!user) {
-        throw new RequestError('Неправильные почта или пароль');
+        throw new AuthError('Неправильные почта или пароль');
       }
 
       return bcrypt.compare(password, user.password)
         .then((matched) => {
           if (!matched) {
-            throw new RequestError('Неправильные почта или пароль');
+            throw new AuthError('Неправильные почта или пароль');
           }
           return user;
         });
     });
 };
 
-userSchema.statics.findAndChangedUser = function (_id, obj) {
+userSchema.statics.findAndChangedUser = function (_id: string | undefined, obj: any) {
   return this.findByIdAndUpdate(
     _id,
     obj,

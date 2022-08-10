@@ -10,15 +10,29 @@ export const deleteCard = (req: SessionRequest, res: Response, next: NextFunctio
   const _id = req.params.cardId;
   const _userId = req.user?._id;
 
-  Card.findOneAndDelete({ _id })
+  Card.findById(_id)
     .then((card) => {
-      if (card && _userId !== String(card.owner)) {
-        throw new ForbiddenError('Нельзя удалить чужую карточку');
-      }
       if (!card) {
         throw new NotFoundError('Такой карточки не существует.');
       }
-      return res.status(200).send({ message: 'Карточка удалена.' });
+      if (card && _userId !== String(card.owner)) {
+        throw new ForbiddenError('Нельзя удалить чужую карточку');
+      }
+      return Card.deleteOne({ _id })
+        .then((data) => {
+          if (data.deletedCount === 0) {
+            throw new NotFoundError('Такой карточки не существует.');
+          }
+          return res.status(200).send({ message: 'Карточка удалена.' });
+        })
+        .catch((err) => {
+          switch (err.name) {
+            case 'CastError':
+              next(new RequestError('Переданы некорректные данные.'));
+              break;
+            default: next(err);
+          }
+        });
     })
     .catch((err) => {
       switch (err.name) {

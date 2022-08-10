@@ -3,6 +3,8 @@ import { celebrate, Joi } from 'celebrate';
 import {
   findAll, findById, changeProfile, changeAvatar, findUser,
 } from '../controllers/user';
+import { idValidation } from '../utils/const';
+import { url } from '../utils/patterns';
 
 const router = Router();
 
@@ -10,7 +12,7 @@ router.get('/me', findUser);
 
 router.get('/:userId', celebrate({
   params: Joi.object().keys({
-    userId: Joi.string().alphanum().length(24),
+    userId: idValidation.required(),
   }),
 }), findById);
 
@@ -26,7 +28,7 @@ router.patch('/me', celebrate({
 router.patch('/me/avatar', celebrate({
   body: Joi.object().keys({
     // eslint-disable-next-line no-useless-escape
-    avatar: Joi.string().regex(/https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9-\._~:\/?#\[\]@!\$&'\(\)\*\+,;=]{1,}\.[a-zA-Z]{2,}#{0,1}/),
+    avatar: Joi.string().regex(url),
   }),
 }), changeAvatar);
 

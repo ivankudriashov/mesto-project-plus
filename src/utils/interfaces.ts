@@ -5,3 +5,8 @@ export interface SessionRequest extends Request {
     _id: string;
   }
 }
+
+export interface SessionError extends Error {
+  statusCode: number,
+  message: string
+}

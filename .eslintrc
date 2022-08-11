@@ -39,5 +39,5 @@
           }
       ],
       "no-underscore-dangle": ["error", { "allow": ["_id", "_userId"] }]
-  },
+  }
 }
